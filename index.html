@@ -157,29 +157,54 @@
       cancelAnimationFrame(animationFrameId);
     });
 
-    window.addEventListener('mousemove', throttleMove);
+    // Use pointer events for both mouse and touch interactions
 
-    // Mouse up: end dragging and start inertia.
-    document.addEventListener('mouseup', () => {
-      isDragging = false;
-      requestAnimationFrame(updateCanvasPosition);
-    });
+// Pointer down: Start dragging and capture the pointer
+canvas.addEventListener('pointerdown', (e) => {
+  isDragging = true;
+  startX = e.clientX;
+  startY = e.clientY;
+  lastX = startX;
+  lastY = startY;
+  // This ensures you continue receiving pointer events even if the pointer leaves the canvas.
+  canvas.setPointerCapture(e.pointerId);
+  cancelAnimationFrame(animationFrameId);
+});
 
-    // Change project (and update bounds if needed)
-    function changeProject(imageUrl) {
-      canvas.style.backgroundImage = `url('${imageUrl}')`;
-      // You could recenter here if desired.
-    }
+// Pointer move: Drag the canvas
+document.addEventListener('pointermove', (e) => {
+  if (!isDragging) return;
+  
+  // Calculate movement delta
+  const deltaX = e.clientX - lastX;
+  const deltaY = e.clientY - lastY;
+  
+  // Calculate new scroll positions, then clamp them within bounds.
+  const { maxScrollLeft, maxScrollTop } = getBounds();
+  let newScrollLeft = window.scrollX - deltaX;
+  let newScrollTop = window.scrollY - deltaY;
+  newScrollLeft = clamp(newScrollLeft, 0, maxScrollLeft);
+  newScrollTop = clamp(newScrollTop, 0, maxScrollTop);
+  window.scrollTo(newScrollLeft, newScrollTop);
+  
+  // Save velocity for inertia
+  velocityX = deltaX;
+  velocityY = deltaY;
+  
+  // Update last positions
+  lastX = e.clientX;
+  lastY = e.clientY;
+});
 
-    // Center the canvas on load (so that the center of the canvas is in view).
-    function centerCanvas() {
-      // Canvas is 5000px wide, and its top is at 50px.
-      const canvasWidth = canvas.offsetWidth; // 5000
-      const canvasHeight = canvas.offsetHeight + 50; // 5050
-      const scrollLeft = (canvasWidth - window.innerWidth) / 2;
-      const scrollTop = (canvasHeight - window.innerHeight) / 2;
-      window.scrollTo(scrollLeft, scrollTop);
-    }
+// Pointer up (and pointer cancel): End dragging and start inertia
+document.addEventListener('pointerup', (e) => {
+  isDragging = false;
+  requestAnimationFrame(updateCanvasPosition);
+});
+document.addEventListener('pointercancel', (e) => {
+  isDragging = false;
+});
+
 
     window.addEventListener('load', () => {
       centerCanvas();
