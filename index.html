@@ -54,7 +54,7 @@
       top: 50px; /* Offset due to navbar */
       left: 0;
       cursor: grab;
-      
+      touch-action: none;
     }
     .canvas-container:active {
       cursor: grabbing;
@@ -162,6 +162,7 @@
 
 // Pointer down: Start dragging and capture the pointer
 canvas.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
   isDragging = true;
   startX = e.clientX;
   startY = e.clientY;
