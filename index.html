@@ -18,30 +18,89 @@
       min-width: 5000px;
       min-height: 5050px; /* 5000px canvas height + 50px for navbar offset */
     }
-    /* Top Navigation Bar */
+    /* Default navbar styles */
     .navbar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 10px 20px;
-      display: flex;
-      gap: 20px;
-      z-index: 10;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: rgba(0, 0, 0, 1); /* This is your intended top bar background */
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        z-index: 1000; /* Make sure it’s on top */
     }
-    .navbar a {
-      color: white;
-      text-decoration: none;
-      cursor: pointer;
-      padding: 5px 10px;
-      transition: 0.3s;
+
+    /* Navbar links */
+    .menu-links {
+        display: flex;
+        gap: 20px;
     }
-    .navbar a:hover {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 5px;
+
+    /* Style for navbar links */
+    .menu-links a {
+        color: white;
+        text-decoration: none;
+        cursor: pointer;
+        padding: 5px 10px;
+        transition: 0.3s;
     }
+
+    /* Hover effect */
+    .menu-links a:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 5px;
+    }
+
+    /* Hide menu button on larger screens */
+    .menu-button {
+        display: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: white;
+    }
+
+    /* Mobile styles */
+    @media (max-width: 768px) {
+        .navbar {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 10px;
+        }
+
+        .menu-button {
+            display: block; /* Show the menu button on mobile */
+        }
+
+        .menu-links {
+            flex-direction: column;
+            width: 100%;
+            gap: 10px;
+            padding-top: 10px;
+
+            /* Fix: Use max-height + overflow to allow smooth dropdown */
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: transparent;
+        }
+
+        .menu-links a {
+            display: block;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        /* Show menu when active */
+        .menu-links.active {
+            max-height: 200px; /* Adjust height based on the number of links */
+        }
+    }
+
+
     /* Movable Canvas */
     .canvas-container {
       width: 3000px;
@@ -64,11 +123,15 @@
 <body>
 
   <!-- Navigation Bar -->
-  <div class="navbar">
-    <a onclick="changeProject('Canvas per sito.png')">Of Echoes & Shadows</a>
-    <a onclick="changeProject('Canvas per sito.png')">Project 2</a>
-    <a onclick="changeProject('Canvas per sito.png')">Project 3</a>
-  </div>
+    <div class="navbar">
+        <div class="menu-button" onclick="toggleMenu()">☰</div>
+        <div class="menu-links">
+            <a onclick="changeProject('Canvas per sito.png')">Of Echoes & Shadows</a>
+            <a onclick="changeProject('project2.jpg')">Project 2</a>
+            <a onclick="changeProject('project3.jpg')">Project 3</a>
+        </div>
+    </div>
+
 
   <!-- Movable Canvas -->
   <div class="canvas-container"></div>
@@ -208,15 +271,58 @@ document.addEventListener('pointercancel', (e) => {
 });
 
 
-    window.addEventListener('load', () => {
-      centerCanvas();
-    });
+window.addEventListener('load', () => {
+    centerCanvas();
+});
 
-    // Optional: recenter on resize if you wish.
-    window.addEventListener('resize', () => {
-      centerCanvas();
-    });
-  </script>
+// Optional: recenter on resize if you wish.
+window.addEventListener('resize', () => {
+    centerCanvas();
+});
+
+function updateCanvasSize() {
+    const canvas = document.querySelector('.canvas-container');
+    const screenWidth = window.innerWidth;
+
+    if (screenWidth < 600) {
+        canvas.style.width = '900px';
+        canvas.style.height = '900px';
+    } else if (screenWidth < 1024) {
+        canvas.style.width = '1500px';
+        canvas.style.height = '1500px';
+    } else {
+        canvas.style.width = '3000px';
+        canvas.style.height = '3000px';
+    }
+}
+
+// Run once on load
+updateCanvasSize();
+
+// Update on window resize
+window.addEventListener('resize', updateCanvasSize);
+
+
+function toggleMenu() {
+    const menu = document.querySelector('.menu-links');
+    menu.classList.toggle('active');
+}
+
+
+function changeProject(imageUrl) {
+  const canvas = document.querySelector('.canvas-container');
+  canvas.style.backgroundImage = `url('${imageUrl}')`;
+  // Close the menu by removing the "active" class from .menu-links
+  const menu = document.querySelector('.menu-links');
+  menu.classList.remove('active');
+}
+
+
+
+
+
+
+</script>
 
 </body>
 </html>
