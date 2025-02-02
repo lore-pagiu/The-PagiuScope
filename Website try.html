@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The PagiuScope - Projects</title>
+  <style>
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #222;
+      font-family: Arial, sans-serif;
+      /* Force the document to be as large as the canvas */
+      min-width: 5000px;
+      min-height: 5050px; /* 5000px canvas height + 50px for navbar offset */
+    }
+    /* Top Navigation Bar */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      gap: 20px;
+      z-index: 10;
+    }
+    .navbar a {
+      color: white;
+      text-decoration: none;
+      cursor: pointer;
+      padding: 5px 10px;
+      transition: 0.3s;
+    }
+    .navbar a:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+    }
+    /* Movable Canvas */
+    .canvas-container {
+      width: 3000px;
+      height: 3000px;
+      background-image: url('Canvas per sito.png'); /* Default project image */
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      position: absolute;
+      top: 50px; /* Offset due to navbar */
+      left: 0;
+      cursor: grab;
+    }
+    .canvas-container:active {
+      cursor: grabbing;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <div class="navbar">
+    <a onclick="changeProject('Canvas per sito.png')">Of Echoes & Shadows</a>
+    <a onclick="changeProject('Canvas per sito.png')">Project 2</a>
+    <a onclick="changeProject('Canvas per sito.png')">Project 3</a>
+  </div>
+
+  <!-- Movable Canvas -->
+  <div class="canvas-container"></div>
+
+  <script>
+    const canvas = document.querySelector('.canvas-container');
+
+    let isDragging = false;
+    let startX, startY, lastX, lastY;
+    let velocityX = 0, velocityY = 0;
+    const friction = 0.95; // How fast inertia slows down
+    let animationFrameId;
+    let lastMoveTime = 0;
+
+    // We'll use these when clamping scrolling:
+    // The canvas container is 5000px wide,
+    // and its height is 5000px but placed 50px from the top,
+    // so the effective document height is 5000 + 50 = 5050px.
+    function clamp(val, min, max) {
+      return Math.min(Math.max(val, min), max);
+    }
+
+    // Compute the current document bounds for scrolling.
+    function getBounds() {
+      const canvasWidth = canvas.offsetWidth; // 5000px
+      const canvasHeight = canvas.offsetHeight + 50; // canvas height + navbar offset
+      const maxScrollLeft = canvasWidth - window.innerWidth;
+      const maxScrollTop = canvasHeight - window.innerHeight;
+      return { maxScrollLeft, maxScrollTop };
+    }
+
+    // Update canvas position during inertia movement with clamping.
+    function updateCanvasPosition() {
+      const { maxScrollLeft, maxScrollTop } = getBounds();
+      // Calculate new scroll positions
+      let newScrollLeft = window.scrollX - velocityX;
+      let newScrollTop = window.scrollY - velocityY;
+
+      // Clamp them within 0 and the maximum scroll allowed.
+      newScrollLeft = clamp(newScrollLeft, 0, maxScrollLeft);
+      newScrollTop = clamp(newScrollTop, 0, maxScrollTop);
+
+      window.scrollTo(newScrollLeft, newScrollTop);
+
+      // Apply friction
+      velocityX *= friction;
+      velocityY *= friction;
+
+      if (Math.abs(velocityX) > 0.1 || Math.abs(velocityY) > 0.1) {
+        animationFrameId = requestAnimationFrame(updateCanvasPosition);
+      }
+    }
+
+    // Throttled mousemove for dragging.
+    function throttleMove(e) {
+      const currentTime = Date.now();
+      if (currentTime - lastMoveTime < 10) return; // throttle roughly to 60fps
+      lastMoveTime = currentTime;
+      if (!isDragging) return;
+
+      const deltaX = e.clientX - lastX;
+      const deltaY = e.clientY - lastY;
+
+      // Instead of scrollBy, compute new scroll positions using clamping.
+      const { maxScrollLeft, maxScrollTop } = getBounds();
+      let newScrollLeft = window.scrollX - deltaX;
+      let newScrollTop = window.scrollY - deltaY;
+      newScrollLeft = clamp(newScrollLeft, 0, maxScrollLeft);
+      newScrollTop = clamp(newScrollTop, 0, maxScrollTop);
+      window.scrollTo(newScrollLeft, newScrollTop);
+
+      // Save velocities for inertia
+      velocityX = deltaX;
+      velocityY = deltaY;
+
+      lastX = e.clientX;
+      lastY = e.clientY;
+    }
+
+    // Mouse down: start dragging.
+    canvas.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      lastX = startX;
+      lastY = startY;
+      cancelAnimationFrame(animationFrameId);
+    });
+
+    window.addEventListener('mousemove', throttleMove);
+
+    // Mouse up: end dragging and start inertia.
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+      requestAnimationFrame(updateCanvasPosition);
+    });
+
+    // Change project (and update bounds if needed)
+    function changeProject(imageUrl) {
+      canvas.style.backgroundImage = `url('${imageUrl}')`;
+      // You could recenter here if desired.
+    }
+
+    // Center the canvas on load (so that the center of the canvas is in view).
+    function centerCanvas() {
+      // Canvas is 5000px wide, and its top is at 50px.
+      const canvasWidth = canvas.offsetWidth; // 5000
+      const canvasHeight = canvas.offsetHeight + 50; // 5050
+      const scrollLeft = (canvasWidth - window.innerWidth) / 2;
+      const scrollTop = (canvasHeight - window.innerHeight) / 2;
+      window.scrollTo(scrollLeft, scrollTop);
+    }
+
+    window.addEventListener('load', () => {
+      centerCanvas();
+    });
+
+    // Optional: recenter on resize if you wish.
+    window.addEventListener('resize', () => {
+      centerCanvas();
+    });
+  </script>
+
+</body>
+</html>
