@@ -160,7 +160,7 @@
     window.addEventListener('mousemove', throttleMove);
 
     // Mouse up: end dragging and start inertia.
-    window.addEventListener('mouseup', () => {
+    document.addEventListener('mouseup', () => {
       isDragging = false;
       requestAnimationFrame(updateCanvasPosition);
     });
