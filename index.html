@@ -270,6 +270,26 @@ document.addEventListener('pointercancel', (e) => {
   isDragging = false;
 });
 
+function centerCanvas() {
+    // Get canvas dimensions. The canvas height includes the 50px navbar offset.
+    const canvasWidth = canvas.offsetWidth; // e.g., 5000px
+    const canvasHeight = canvas.offsetHeight + 50; // 5000px + 50px = 5050px
+
+    // If the viewport is wider than the canvas, center the canvas by adjusting its 'left' CSS.
+    if (window.innerWidth > canvasWidth) {
+        // Center horizontally using CSS
+        canvas.style.left = ((window.innerWidth - canvasWidth) / 2) + 'px';
+        // For vertical centering, use scroll if needed.
+        const scrollTop = (canvasHeight - window.innerHeight) / 2;
+        window.scrollTo(0, scrollTop);
+    } else {
+        // If the canvas is wider than or equal to the viewport, use scroll centering.
+        canvas.style.left = '0px'; // Reset left so that scrolling works normally.
+        const scrollLeft = (canvasWidth - window.innerWidth) / 2;
+        const scrollTop = (canvasHeight - window.innerHeight) / 2;
+        window.scrollTo(scrollLeft, scrollTop);
+    }
+}
 
 window.addEventListener('load', () => {
     centerCanvas();
@@ -315,6 +335,7 @@ function changeProject(imageUrl) {
   // Close the menu by removing the "active" class from .menu-links
   const menu = document.querySelector('.menu-links');
   menu.classList.remove('active');
+  centerCanvas();
 }
 
 
